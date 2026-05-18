@@ -1,9 +1,22 @@
 apiVersion: fleet.harbor.io/v1alpha1
 kind: Satellite
 metadata:
-  labels:
-    app.kubernetes.io/name: satellite-operator
-    app.kubernetes.io/managed-by: kustomize
-  name: satellite-sample
+  name: edge-node-1
+  namespace: harbor-system
 spec:
-  # TODO(user): Add fields here
+  groundControlURL: http://ground-control.harbor-system.svc.cluster.local:8080
+  configName: prod-config
+  groups:
+    - us-west-edge
+  secretRef: gc-admin-credentials
+---
+# Secret with Ground Control credentials
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gc-admin-credentials
+  namespace: harbor-system
+type: Opaque
+stringData:
+  username: admin
+  password: Admin1234  # Replace with your actual password

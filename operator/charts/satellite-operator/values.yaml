@@ -1,0 +1,33 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/ashimrai123/satellite-operator
+  pullPolicy: IfNotPresent
+  tag: "0.1.0"
+
+imagePullSecrets: []
+
+serviceAccount:
+  create: true
+  name: satellite-operator
+
+rbac:
+  create: true
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 128Mi
+  requests:
+    cpu: 10m
+    memory: 64Mi
+
+# Namespace to watch for Satellite CRs (empty = all namespaces)
+watchNamespace: ""
+
+# Leader election for HA deployments
+leaderElect: true
+
+metrics:
+  enabled: true
+  port: 8080

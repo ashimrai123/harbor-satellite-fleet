@@ -1,0 +1,42 @@
+{{- if .Values.rbac.create }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "satellite-operator.fullname" . }}-role
+  labels:
+    {{- include "satellite-operator.labels" . | nindent 4 }}
+rules:
+  - apiGroups: ["fleet.harbor.io"]
+    resources: ["satellites"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["fleet.harbor.io"]
+    resources: ["satellites/status"]
+    verbs: ["get", "update", "patch"]
+  - apiGroups: ["fleet.harbor.io"]
+    resources: ["satellites/finalizers"]
+    verbs: ["update"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "satellite-operator.fullname" . }}-rolebinding
+  labels:
+    {{- include "satellite-operator.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "satellite-operator.fullname" . }}-role
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Values.serviceAccount.name }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}

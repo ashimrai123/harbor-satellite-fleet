@@ -1,0 +1,16 @@
+apiVersion: v2
+name: satellite-operator
+description: Kubernetes operator for managing Harbor Satellite fleets via Ground Control
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - harbor
+  - satellite
+  - operator
+  - fleet
+home: https://github.com/ashimrai123/harbor-satellite-fleet
+sources:
+  - https://github.com/ashimrai123/harbor-satellite-fleet
+maintainers:
+  - name: ashimrai123
