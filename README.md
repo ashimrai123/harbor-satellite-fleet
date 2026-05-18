@@ -68,16 +68,53 @@ spec:
 
 The `pkg/client/` package is a reusable Go client for the Ground Control API, designed to be shared between the CLI and the Kubernetes operator. The operator's reconcile loop will call the same `client.RegisterSatellite()`, `client.SyncGroup()`, and `client.SetSatelliteConfig()` methods that the CLI uses.
 
-### operator (planned)
+### operator (Kubernetes Fleet Operator)
 
-Kubernetes operator managing Satellite instances as custom resources, enabling GitOps-driven fleet management through ArgoCD or Flux.
+A Kubernetes operator that manages Harbor Satellite instances as custom resources, reconciled against Ground Control.
+
+**Satellite CR example:**
+
+```yaml
+apiVersion: fleet.harbor.io/v1alpha1
+kind: Satellite
+metadata:
+  name: edge-node-1
+  namespace: harbor-system
+spec:
+  groundControlURL: http://ground-control:8080
+  configName: prod-config
+  groups:
+    - us-west-edge
+  secretRef: gc-admin-credentials
+```
+
+**What the operator does:**
+- Watches `Satellite` custom resources
+- Registers the satellite with Ground Control on CR creation, stores ZTR token in a Secret
+- Syncs satellite to specified groups and assigns the config
+- Removes the satellite from Ground Control when the CR is deleted (finalizer pattern)
+- Reports status conditions: `Registered`, `GroupsSynced`, `ConfigAssigned`, `Ready`
+- Re-queues every 60s for health monitoring
+
+**Deploy with Helm:**
+```bash
+helm install satellite-operator operator/charts/satellite-operator \
+  --namespace harbor-system --create-namespace
+
+kubectl apply -f operator/config/samples/fleet_v1alpha1_satellite.yaml
+
+kubectl get satellites -n harbor-system
+# NAME          PHASE   GC-ID   CONFIG        AGE
+# edge-node-1   Ready   13      prod-config   2m
+```
 
 ## Tech Stack
 
 - Go 1.23+
 - [spf13/cobra](https://github.com/spf13/cobra) - CLI framework
-- [kubebuilder](https://book.kubebuilder.io/) - CRD + controller scaffolding (operator)
-- [controller-runtime](https://github.com/kubernetes-sigs/controller-runtime) - Kubernetes operator framework (operator)
+- [kubebuilder v4](https://book.kubebuilder.io/) - CRD + controller scaffolding
+- [controller-runtime](https://github.com/kubernetes-sigs/controller-runtime) - Kubernetes operator framework
+- [Helm](https://helm.sh/) - Operator packaging and deployment
 
 ## Related
 
