@@ -1,0 +1,16 @@
+apiVersion: groundcontrol/v1
+kind: SatelliteFleet
+metadata:
+  name: demo-fleet
+spec:
+  config:
+    name: default
+  groups:
+    - name: demo-edge-group
+      artifacts:
+        - repository: library/nginx
+          tag: ["latest"]
+  satellites:
+    - name: demo-sat-1
+      groups:
+        - demo-edge-group
