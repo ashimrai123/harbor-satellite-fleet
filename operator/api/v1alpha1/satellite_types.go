@@ -67,6 +67,11 @@ type SatelliteSpec struct {
 	// will be stored after registration. Defaults to "<satellite-name>-token".
 	// +optional
 	TokenSecretName string `json:"tokenSecretName,omitempty"`
+
+	// DirectDelivery enables writing images directly to the containerd store
+	// on k3s/RKE2 nodes, bypassing the local zot mirror.
+	// +optional
+	DirectDelivery bool `json:"directDelivery,omitempty"`
 }
 
 // SatelliteStatus defines the observed state of Satellite.
