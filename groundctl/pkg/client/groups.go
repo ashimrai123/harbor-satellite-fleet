@@ -80,5 +80,6 @@ func (c *Client) AddSatelliteToGroup(satellite, group string) error {
 
 // RemoveSatelliteFromGroup removes a satellite from a group.
 func (c *Client) RemoveSatelliteFromGroup(satellite, group string) error {
-	return c.doDelete("/api/groups/satellite")
+	req := SatelliteGroupRequest{Satellite: satellite, Group: group}
+	return c.doDeleteWithBody("/api/groups/satellite", req)
 }

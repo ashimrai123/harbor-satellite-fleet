@@ -69,8 +69,74 @@ var groupGetCmd = &cobra.Command{
 	},
 }
 
+var groupDeleteCmd = &cobra.Command{
+	Use:   "delete [name]",
+	Short: "Delete a group",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		c, err := client.NewClientFromConfig()
+		if err != nil {
+			return err
+		}
+
+		if err := c.DeleteGroup(args[0]); err != nil {
+			return fmt.Errorf("failed to delete group: %w", err)
+		}
+
+		output.PrintSuccess("group %q deleted", args[0])
+		return nil
+	},
+}
+
+var groupAddSatelliteCmd = &cobra.Command{
+	Use:   "add-satellite [group] [satellite]",
+	Short: "Add a satellite to a group",
+	Args:  cobra.ExactArgs(2),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		c, err := client.NewClientFromConfig()
+		if err != nil {
+			return err
+		}
+
+		group := args[0]
+		satellite := args[1]
+
+		if err := c.AddSatelliteToGroup(satellite, group); err != nil {
+			return fmt.Errorf("failed to add satellite to group: %w", err)
+		}
+
+		output.PrintSuccess("satellite %q added to group %q", satellite, group)
+		return nil
+	},
+}
+
+var groupRemoveSatelliteCmd = &cobra.Command{
+	Use:   "remove-satellite [group] [satellite]",
+	Short: "Remove a satellite from a group",
+	Args:  cobra.ExactArgs(2),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		c, err := client.NewClientFromConfig()
+		if err != nil {
+			return err
+		}
+
+		group := args[0]
+		satellite := args[1]
+
+		if err := c.RemoveSatelliteFromGroup(satellite, group); err != nil {
+			return fmt.Errorf("failed to remove satellite from group: %w", err)
+		}
+
+		output.PrintSuccess("satellite %q removed from group %q", satellite, group)
+		return nil
+	},
+}
+
 func init() {
 	groupCmd.AddCommand(groupListCmd)
 	groupCmd.AddCommand(groupGetCmd)
+	groupCmd.AddCommand(groupDeleteCmd)
+	groupCmd.AddCommand(groupAddSatelliteCmd)
+	groupCmd.AddCommand(groupRemoveSatelliteCmd)
 	rootCmd.AddCommand(groupCmd)
 }

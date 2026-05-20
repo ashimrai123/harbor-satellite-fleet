@@ -14,6 +14,11 @@ var satelliteCmd = &cobra.Command{
 	Short:   "Manage satellites",
 }
 
+var (
+	listActive bool
+	listStale  bool
+)
+
 var satelliteListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all satellites",
@@ -23,7 +28,19 @@ var satelliteListCmd = &cobra.Command{
 			return err
 		}
 
-		sats, err := c.ListSatellites()
+		if listActive && listStale {
+			return fmt.Errorf("cannot specify both --active and --stale")
+		}
+
+		var sats []client.Satellite
+		if listActive {
+			sats, err = c.GetActiveSatellites()
+		} else if listStale {
+			sats, err = c.GetStaleSatellites()
+		} else {
+			sats, err = c.ListSatellites()
+		}
+
 		if err != nil {
 			return fmt.Errorf("failed to list satellites: %w", err)
 		}
@@ -154,8 +171,41 @@ var satelliteStatusCmd = &cobra.Command{
 	},
 }
 
+var satelliteCachedImagesCmd = &cobra.Command{
+	Use:   "cached-images [name]",
+	Short: "Get cached images on a satellite",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		c, err := client.NewClientFromConfig()
+		if err != nil {
+			return err
+		}
+
+		images, err := c.GetCachedImages(args[0])
+		if err != nil {
+			return fmt.Errorf("failed to get cached images: %w", err)
+		}
+
+		p := output.NewPrinter(outputFormat)
+		headers := []string{"ID", "REFERENCE", "SIZE", "CREATED"}
+		var rows [][]string
+		for _, img := range images {
+			rows = append(rows, []string{
+				fmt.Sprintf("%d", img.ID),
+				img.Reference,
+				fmt.Sprintf("%.1f MB", float64(img.SizeBytes)/(1024*1024)),
+				img.CreatedAt.Format("2006-01-02 15:04:05"),
+			})
+		}
+		p.PrintTable(headers, rows)
+		return nil
+	},
+}
 
 func init() {
+	satelliteListCmd.Flags().BoolVar(&listActive, "active", false, "List only recently active satellites")
+	satelliteListCmd.Flags().BoolVar(&listStale, "stale", false, "List only stale satellites")
+
 	satelliteRegisterCmd.Flags().StringVar(&registerName, "name", "", "Satellite name (required)")
 	satelliteRegisterCmd.Flags().StringVar(&registerConfig, "config", "", "Config name (required)")
 	satelliteRegisterCmd.Flags().StringSliceVar(&registerGroups, "groups", nil, "Comma-separated group names")
@@ -167,5 +217,6 @@ func init() {
 	satelliteCmd.AddCommand(satelliteRegisterCmd)
 	satelliteCmd.AddCommand(satelliteDeleteCmd)
 	satelliteCmd.AddCommand(satelliteStatusCmd)
+	satelliteCmd.AddCommand(satelliteCachedImagesCmd)
 	rootCmd.AddCommand(satelliteCmd)
 }

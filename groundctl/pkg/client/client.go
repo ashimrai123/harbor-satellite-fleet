@@ -157,6 +157,22 @@ func (c *Client) doDelete(path string) error {
 	return nil
 }
 
+// doDeleteWithBody is a convenience wrapper for DELETE requests with a body.
+func (c *Client) doDeleteWithBody(path string, body interface{}) error {
+	resp, err := c.doRequest("DELETE", path, body)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		errBody, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("delete failed (status %d): %s", resp.StatusCode, string(errBody))
+	}
+
+	return nil
+}
+
 // configDir returns the path to the groundctl config directory.
 func configDir() (string, error) {
 	home, err := os.UserHomeDir()

@@ -64,8 +64,51 @@ var configGetCmd = &cobra.Command{
 	},
 }
 
+var configDeleteCmd = &cobra.Command{
+	Use:   "delete [name]",
+	Short: "Delete a config",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		c, err := client.NewClientFromConfig()
+		if err != nil {
+			return err
+		}
+
+		if err := c.DeleteConfig(args[0]); err != nil {
+			return fmt.Errorf("failed to delete config: %w", err)
+		}
+
+		output.PrintSuccess("config %q deleted", args[0])
+		return nil
+	},
+}
+
+var configAssignToSatelliteCmd = &cobra.Command{
+	Use:   "assign-to-satellite [config] [satellite]",
+	Short: "Assign a configuration to a satellite",
+	Args:  cobra.ExactArgs(2),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		c, err := client.NewClientFromConfig()
+		if err != nil {
+			return err
+		}
+
+		configName := args[0]
+		satellite := args[1]
+
+		if err := c.SetSatelliteConfig(satellite, configName); err != nil {
+			return fmt.Errorf("failed to assign config to satellite: %w", err)
+		}
+
+		output.PrintSuccess("config %q assigned to satellite %q", configName, satellite)
+		return nil
+	},
+}
+
 func init() {
 	configCmd.AddCommand(configListCmd)
 	configCmd.AddCommand(configGetCmd)
+	configCmd.AddCommand(configDeleteCmd)
+	configCmd.AddCommand(configAssignToSatelliteCmd)
 	rootCmd.AddCommand(configCmd)
 }
