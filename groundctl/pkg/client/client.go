@@ -35,11 +35,18 @@ func NewClient(baseURL, token string) *Client {
 	}
 }
 
-// NewClientFromConfig loads the client from the saved config file.
+// NewClientFromConfig loads the client from the saved config file,
+// falling back to GROUNDCTL_URL and GROUNDCTL_TOKEN environment variables.
 func NewClientFromConfig() (*Client, error) {
+	url := os.Getenv("GROUNDCTL_URL")
+	token := os.Getenv("GROUNDCTL_TOKEN")
+	if url != "" && token != "" {
+		return NewClient(url, token), nil
+	}
+
 	cfg, err := LoadConfig()
 	if err != nil {
-		return nil, fmt.Errorf("not logged in. Run 'groundctl login' first: %w", err)
+		return nil, fmt.Errorf("not logged in. Run 'groundctl login' first or set GROUNDCTL_URL and GROUNDCTL_TOKEN: %w", err)
 	}
 	return NewClient(cfg.BaseURL, cfg.Token), nil
 }
