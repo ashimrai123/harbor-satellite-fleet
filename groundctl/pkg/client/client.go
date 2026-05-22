@@ -190,6 +190,35 @@ func configDir() (string, error) {
 	return dir, os.MkdirAll(dir, 0o700)
 }
 
+// Logout invalidates the token on the server and removes the local config.
+func (c *Client) Logout() error {
+	resp, err := c.doRequest("POST", "/api/logout", nil)
+	if err != nil {
+		return fmt.Errorf("logout request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		errBody, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("logout failed (status %d): %s", resp.StatusCode, string(errBody))
+	}
+
+	return DeleteConfig()
+}
+
+// DeleteConfig removes the persisted CLI configuration file.
+func DeleteConfig() error {
+	dir, err := configDir()
+	if err != nil {
+		return err
+	}
+	path := filepath.Join(dir, "config.json")
+	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	return nil
+}
+
 // SaveConfig persists the client configuration.
 func SaveConfig(cfg CLIConfig) error {
 	dir, err := configDir()

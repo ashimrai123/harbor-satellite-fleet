@@ -38,9 +38,35 @@ var loginCmd = &cobra.Command{
 	},
 }
 
+var logoutCmd = &cobra.Command{
+	Use:   "logout",
+	Short: "Log out from Ground Control",
+	Long:  "Invalidate the current auth token on the server and remove the local credentials.",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		c, err := client.NewClientFromConfig()
+		if err != nil {
+			// If there's no config at all, just clean up silently
+			_ = client.DeleteConfig()
+			output.PrintSuccess("already logged out")
+			return nil
+		}
+
+		if err := c.Logout(); err != nil {
+			// Even if the server call fails (e.g. expired token), remove local creds
+			_ = client.DeleteConfig()
+			output.PrintSuccess("local credentials removed (server returned: %v)", err)
+			return nil
+		}
+
+		output.PrintSuccess("logged out")
+		return nil
+	},
+}
+
 func init() {
 	loginCmd.Flags().StringVarP(&loginURL, "url", "u", "", "Ground Control URL (e.g. http://localhost:8080)")
 	loginCmd.Flags().StringVarP(&loginUser, "user", "U", "", "Username")
 	loginCmd.Flags().StringVarP(&loginPassword, "password", "P", "", "Password")
 	rootCmd.AddCommand(loginCmd)
+	rootCmd.AddCommand(logoutCmd)
 }
