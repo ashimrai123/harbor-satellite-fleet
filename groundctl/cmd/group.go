@@ -132,11 +132,44 @@ var groupRemoveSatelliteCmd = &cobra.Command{
 	},
 }
 
+var groupListSatellitesCmd = &cobra.Command{
+	Use:   "list-satellites [group]",
+	Short: "List satellites in a group",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		c, err := client.NewClientFromConfig()
+		if err != nil {
+			return err
+		}
+
+		sats, err := c.ListGroupSatellites(args[0])
+		if err != nil {
+			return fmt.Errorf("failed to list satellites in group: %w", err)
+		}
+
+		p := output.NewPrinter(outputFormat)
+		headers := []string{"NAME", "ID", "LAST SEEN", "HEARTBEAT", "CREATED"}
+		var rows [][]string
+		for _, s := range sats {
+			rows = append(rows, []string{
+				s.Name,
+				fmt.Sprintf("%d", s.ID),
+				s.LastSeen.String(),
+				s.HeartbeatInterval.Val(),
+				s.CreatedAt.Format("2006-01-02 15:04:05"),
+			})
+		}
+		p.PrintTable(headers, rows)
+		return nil
+	},
+}
+
 func init() {
 	groupCmd.AddCommand(groupListCmd)
 	groupCmd.AddCommand(groupGetCmd)
 	groupCmd.AddCommand(groupDeleteCmd)
 	groupCmd.AddCommand(groupAddSatelliteCmd)
 	groupCmd.AddCommand(groupRemoveSatelliteCmd)
+	groupCmd.AddCommand(groupListSatellitesCmd)
 	rootCmd.AddCommand(groupCmd)
 }
