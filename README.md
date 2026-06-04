@@ -1,7 +1,5 @@
 # harbor-satellite-fleet
 
-> **Note:** This repository is a functional proof-of-concept created for the CNCF LFX 2026 Mentorship application: *Harbor Satellite Ground Control CLI & Kubernetes Fleet Operator*.
-
 Monorepo for [Harbor Satellite](https://github.com/container-registry/harbor-satellite) fleet management tooling, covering the [Ground Control CLI and Kubernetes Fleet Operator](https://github.com/container-registry/harbor-satellite/issues/375).
 
 ## Components
